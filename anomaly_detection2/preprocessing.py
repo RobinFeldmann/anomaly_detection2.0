@@ -32,7 +32,7 @@ def normalize(train_data: torch.Tensor, test_data: torch.Tensor) -> tuple[torch.
     train_data = train_data_normalized.reshape(train_data.shape)
     test_data = test_data_normalized.reshape(test_data.shape)
 
-    # Convert data to PyTorch tensors
+    # Convert data to tensors
     train_data = torch.tensor(train_data, dtype=torch.float32)
     test_data = torch.tensor(test_data, dtype=torch.float32)
 

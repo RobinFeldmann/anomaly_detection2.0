@@ -3,7 +3,6 @@ import torch.nn as nn
 
 
 class Autoencoder(nn.Module):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.info = "Autoencoder"
@@ -89,24 +88,32 @@ class LSTMCNNAutoencoder(Autoencoder):
         self.info = "LSTMCNNAutoencoder"
     def forward(self, x):
         # LSTM Encoder
-        _, (hidden, _) = self.encoder_lstm(x)
-        hidden = hidden.permute(1, 2, 0)  # Reshape for CNN (batch, hidden_dim, timesteps)
+        # lstm_out: (batch, seq_len, hidden_dim)
+        lstm_out, (hidden, _) = self.encoder_lstm(x) 
+
+        # Reshape for CNN
+        # (batch, hidden_dim, seq_len)
+        lstm_out = lstm_out.permute(0, 2, 1) 
 
         # CNN Encoder
-        encoded_cnn = self.encoder_cnn(hidden)
+        encoded_cnn = self.encoder_cnn(lstm_out)
 
         # CNN Decoder
         decoded_cnn = self.decoder_cnn(encoded_cnn)
-        decoded_cnn = decoded_cnn.permute(2, 0, 1)  # Reshape back for LSTM (timesteps, batch, hidden_dim)
+
+        # Reshape back for LSTM Decoder
+        # (batch, seq_len, hidden_dim)
+        decoded_cnn = decoded_cnn.permute(0, 2, 1)  
 
         # LSTM Decoder
-        decoded_lstm, _ = self.decoder_lstm(decoded_cnn.permute(1, 0, 2))
+        decoded_lstm, _ = self.decoder_lstm(decoded_cnn)
+
         return decoded_lstm
 
 
 #LSTM Autoencoder
 class LSTMAutoencoder(Autoencoder):
-    def __init__(self, input_dim, hidden_dim= 64):
+    def __init__(self, input_dim, hidden_dim = 64):
         super(LSTMAutoencoder, self).__init__()
         self.encoder = nn.LSTM(input_dim, hidden_dim, batch_first=True)
         self.decoder = nn.LSTM(hidden_dim, input_dim, batch_first=True)

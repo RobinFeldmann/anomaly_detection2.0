@@ -42,28 +42,27 @@ def model_initialization(models, train_data) -> list[models.Autoencoder]:
     return initialized_models
 
 def main():
+    ##hyperparams
+    num_epochs = 200
+    batch_size = 32
+    window_size = 10
+
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model_list = [models.LSTMAutoencoder, models.AttentionAutoencoderTCN, models.LSTMCNNAutoencoder, models.TemporalCNNAutoencoder]
     X_train, X_test, y_test = dataloading.load_nasa_msl_data("T-13")
-    X_train, X_test = preprocessing.sequence_data(X_train,X_test)
+    X_train, X_test = preprocessing.sequence_data(X_train, X_test, window_size)
     X_train, X_test = preprocessing.normalize(X_train, X_test)
 
 
     initialized_models = model_initialization(model_list, X_train)
 
-    trained_models = train(initialized_models, X_train, num_epochs=50, batch_size= 64, device=device)
+    trained_models = train(initialized_models, X_train, num_epochs=num_epochs, batch_size= batch_size, device=device)
 
     model_losses = eval(trained_models, X_test, device= device)
 
     for loss, model in zip(model_losses, initialized_models):
-        visualize.visualize(loss=loss, y_test=y_test, info = model.info)
-
-
+        visualize.visualize(loss=loss, y_test=y_test,threshold_percent= 98.0, info = model.info, num_epochs= num_epochs, batch_size= batch_size)
 
     
-
-    
-
-   
 if __name__ == "__main__":
     main()
